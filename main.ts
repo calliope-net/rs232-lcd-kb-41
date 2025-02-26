@@ -1,34 +1,48 @@
 input.onButtonEvent(Button.A, input.buttonEventClick(), function () {
+    rs232.comment("Text mit Tastatur eingeben und nach Enter senden")
     basic.setLedColor(0x0000ff)
     sendArray = []
     sendIndex = 0
     keyboardCode = 0
     keyboardIndex = 0
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 15, lcd16x2rgb.lcd16x2_text(""))
+    lcd16x2rgb.setCursorCB(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, false)
     textEingeben()
+    basic.setLedColor(0x00ff00)
     textSenden()
     basic.turnRgbLedOff()
 })
 function textSenden () {
-    if (sendArray.length > sendIndex) {
-        rs232.sendeAsc(sendArray[sendIndex])
+    while (sendArray.length > sendIndex) {
         lcd16x2rgb.setCursorCB(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, sendIndex, true, true)
+        rs232.sendeAsc(sendArray[sendIndex])
         sendIndex += 1
+        basic.pause(100)
     }
+    lcd16x2rgb.setCursorCB(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, sendIndex, true, false)
 }
 input.onButtonEvent(Button.AB, input.buttonEventClick(), function () {
-    while (!(input.buttonIsPressed(Button.A)) && !(input.buttonIsPressed(Button.B))) {
-        lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 3, pins.analogReadPin(AnalogPin.C16), lcd16x2rgb.eAlign.right)
+    rs232.comment("Helligkeit vom Fototransistor anzeigen (analog)")
+    while (keyboardIndex < 10) {
+        lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 12, 15, pins.analogReadPin(AnalogPin.C16), lcd16x2rgb.eAlign.right)
         basic.pause(250)
     }
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 12, 15, lcd16x2rgb.lcd16x2_text(""))
 })
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
-    lcd16x2rgb.clearScreen(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E))
+    rs232.comment("Empfang starten")
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text(""))
+    lcd16x2rgb.setCursorCB(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, false)
     basic.setLedColor(0xff0000)
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, rs232.empfangeText())
     basic.turnRgbLedOff()
 })
+input.onButtonEvent(Button.A, ButtonEvent.Hold, function () {
+    rs232.comment("Eingabe abbrechen und ENTER senden")
+    keyboardCode = 13
+})
 input.onButtonEvent(Button.B, ButtonEvent.Hold, function () {
+    rs232.comment("Empfang abbrechen")
     basic.setLedColor(0xffff00)
     rs232.empfangAbbrechen(true)
     basic.turnRgbLedOff()
@@ -42,6 +56,7 @@ function textEingeben () {
             lcd16x2rgb.writeLCD(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), String.fromCharCode(keyboardCode))
             keyboardIndex += 1
         }
+        basic.pause(100)
     }
     sendArray.push(13)
 }
